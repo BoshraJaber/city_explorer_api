@@ -1,23 +1,56 @@
 # city_explorer_api
-# Project Name
+# Lab06
 
 **Author**: Boshra Jaber
-**Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)
+**Version**: 1.0.0 
 
 ## Overview
-<!-- Provide a high level overview of what this application is and why you are building it, beyond the fact that it's an assignment for this class. (i.e. What's your problem domain?) -->
+As stated in the lab requirement we are building a ** City Explorer Application**. What this app will do is let me search for a city by its name and the result of the search will be a map (its location), a description of its weather with a date.
+, allowing a user to search for a location, present a Map, as well as interesting information about the area, all using data.
 
 ## Getting Started
-<!-- What are the steps that a user must take in order to build this app on their own machine and get it running? -->
+
+The user need to clone the app to its local machine and install the needed packages as stated in the package.json file by running `npm`
+
 
 ## Architecture
-<!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
+This app was designed: 
+* JavaScript, CSS and HTMl for front-end languages.
+* Packages : cors, dotenv, express.
+* Node.JS
+* Heroku to deploy pages on the world wide server.
+
 
 ## Change Log
-<!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
+02-21-2021 8:59pm - Application now has a fully-functional express server, with a GET route for the location resource and the weather (description of the weather with the date in long format)
 
-01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource.
 
 ## Credits and Collaborations
-<!-- Give credit (and a link) to other people or resources that helped you build this application. -->
--->
+[w3school](https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_todatestrin)
+
+----------------
+# Lab06 Features: 
+
+
+| First Task  |     Repository Set Up         |
+|---------|----------------------------------|
+|Start time | 1:00 pm |
+| End Time | 2:00 pm |
+|Estimated Time | 1:00 hour |
+| Actual Time | 1:00 hour |
+
+
+| Second Task  |     Search for a location        |
+|---------|----------------------------------|
+|Start time |2:00 pm |
+| End Time | 4:00 pm |
+|Estimated Time | 2 hours |
+| Actual Time |2 hours |
+
+
+| Third Task  |    Display weather info for location searched        |
+|---------|----------------------------------|
+|Start time | 5:00 pm |
+| End Time |8:00 pm |
+|Estimated Time | 2 hours |
+| Actual Time | 3 hours due to an error delay |
