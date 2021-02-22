@@ -20,17 +20,26 @@ console.log(PORT);
 
 //handeler functions
 function handelLocation(req, res) {
-    let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
-    // because I want to send the object to the client
-    let locationObject = getLoctionData(searchQuery);
-    //200 means everything is ok
-    res.status(200).send(locationObject);
+    try {
+        let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
+        // because I want to send the object to the client
+        let locationObject = getLoctionData(searchQuery);
+        //200 means everything is ok
+        res.status(200).send(locationObject);
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
 }
 
 function handelWeather(req, res) {
     // let searchQuery= req.query.weather;
-    let weatherObject = getWeatherData();
-    res.status(200).send(weatherObject);
+    try {
+        let weatherObject = getWeatherData();
+        res.status(200).send(weatherObject);
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
+
 }
 
 // handel data for function
@@ -59,7 +68,7 @@ function getWeatherData() {
     for (let index = 0; index < descriptionData.length; index++) {
         // console.log(descriptionData[index].datetime);
         // console.log(new Date(descriptionData[index].datetime).toDateString());
-        resultArr.push(new CityWeather(descriptionData[index].weather.description,new Date(descriptionData[index].datetime).toDateString()));
+        resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
     }
 
 
