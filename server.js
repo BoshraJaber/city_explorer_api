@@ -17,7 +17,7 @@ app.get('*', handel404); // for 404 errors, the order of the error function matt
 function handelLocation(req, res) {
     let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
     // because I want to send the object to the client
-    getLoctionData(searchQuery).then(data => {
+    getLoctionData(searchQuery)[0].then(data => {
         res.status(200).send(data);
     })
     //200 means everything is ok
@@ -54,9 +54,10 @@ function getLoctionData(searchQuery) {
             let longitude = data.body[0].lon;
             let latitude = data.body[0].lan;
             let displayName = data.body[0].display_name;
+            let lanLonForWeather = [longitude,latitude ];
 
             let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-            return responseObject;
+            return responseObject, lanLonForWeather;
             // console.log(data);
         } catch (error) {
             res.status(500).send(error);
