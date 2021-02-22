@@ -18,8 +18,6 @@ const PORT = process.env.PORT;
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
-console.log(PORT);
-
 
 //handeler functions
 function handelLocation(req, res) {
@@ -27,7 +25,7 @@ function handelLocation(req, res) {
 
         let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
         // because I want to send the object to the client
-        let locationObject = getLoctionData(searchQuery).then(data=> {
+      getLoctionData(searchQuery).then(data=> {
             res.status(200).send(data);
         })
         //200 means everything is ok
@@ -53,25 +51,25 @@ function handel404(req, res) {
 }
 
 // handel data for function
-function getLoctionData(searchQuery, res) {
+function getLoctionData(searchQuery) {
     //lab07
 const query = {
-    key :  process.env.GEOCODE_API_KEY,
+    key:  process.env.GEOCODE_API_KEY,
     q : searchQuery,
     limit: 1,
     format: 'json',
 }
 
-    let url = 'https://us1.locationiq.com/v1/search.php';
+    let url = 'https://us1.locationiq.com/v1/search.php'; //????
 // add .set() after get() if I want to add it to the head
-     return superagent.get('url').set().then(data => {
+     return superagent.get('url').query(query).then(data => { // why query??
         try{
         let longitude = data.body[0].lon;
         let latitude = data.body[0].lan;
         let displayName = data.body[0].display_name;
 
         let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-        res.status(200).send(responseObject);
+        return responseObject;
         } catch (error) {
             res.status(500).send(error);
         }
@@ -80,7 +78,7 @@ const query = {
         // console.log(data);
         // return data.body;
     }).catch(error => {
-        res.status(404).send('errpr');
+        res.status(500).send('There was an error getting data from API ' + error);
         // console.log(error);
     });
     //return a promise// the type of data that returns is a promise
