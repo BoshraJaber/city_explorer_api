@@ -1,4 +1,5 @@
 'use strict';
+var latLonForWeather = [];
 //require statement (importing packages)
 let express = require('express');
 const cors = require('cors');
@@ -11,13 +12,14 @@ const PORT = process.env.PORT;
 // routes- endpoints
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
+app.get('/parks', handleParks);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
 function handelLocation(req, res) {
     let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
-    // because I want to send the object to the client
-    getLoctionData(searchQuery)[0].then(data => {
+    // because I want to send the object to the client ff
+    getLoctionData(searchQuery).then(data => {
         res.status(200).send(data);
     })
     //200 means everything is ok
@@ -25,12 +27,22 @@ function handelLocation(req, res) {
 
 function handelWeather(req, res) {
     try {
-        let weatherObject = getWeatherData();
-        res.status(200).send(weatherObject);
+        getWeatherData().then(data => {
+            res.status(200).send(data);
+        })
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
+}
 
+function handleParks(req, res) {
+    try {
+        getParkData().then(data => {
+            res.status(200).send(data);
+        })
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
 }
 
 function handel404(req, res) {
@@ -52,12 +64,12 @@ function getLoctionData(searchQuery) {
     return superagent.get(url).query(query).then(data => { // why query??
         try {
             let longitude = data.body[0].lon;
-            let latitude = data.body[0].lan;
+            let latitude = data.body[0].lat;
             let displayName = data.body[0].display_name;
-            let lanLonForWeather = [longitude,latitude ];
+            latLonForWeather = [longitude, latitude];
 
             let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-            return responseObject, lanLonForWeather;
+            return responseObject;
             // console.log(data);
         } catch (error) {
             res.status(500).send(error);
@@ -68,39 +80,39 @@ function getLoctionData(searchQuery) {
 }
 
 function getWeatherData() {
-    // const query = {
-    //     key: process.env.MASTER_API_KEY,
-    //     lat = 0,
-    //     lon = 0,
-    //     format: 'json',
-    // }
-    let url = 'https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=181db746d0254c6d944adf1a4c6bc024';
-
-    return superagent.get(url).then(data => {
-        console.log(data);
-        //I need description and time
-        // let longitude = data.body[0].lon
-        // let descriptionData =
-
-    //         let resultArr = [];
-    //     for (let index = 0; index < descriptionData.length; index++) {
-    //         resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
-    //     }
-
+    const queryWeather = {
+        key: process.env.MASTER_API_KEY,
+        lat: latLonForWeather[0],
+        lon: latLonForWeather[1],
+        format: 'json',
     }
+    let url = 'https://api.weatherbit.io/v2.0/forecast/daily';
 
-    )
-    // let weatherData = require('./data/weather.json');
-    // let descriptionData = weatherData.data;
-    // let resultArr = [];
-    // for (let index = 0; index < descriptionData.length; index++) {
-    //     resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
-    // }
+    return superagent.get(url).query(queryWeather).then(data => {
+        console.log(data);
+        let resultArr = data.body['data'].map(element => {
+            return resultArr.push(new CityWeather(element.weather.description, new Date(element.datetime).toDateString()));
+            //  return element;
+        })
+        return resultArr;
+    })
+    // return resultArr;
+}
 
+function getParkData(params) {
+    const queryPark = {
+        key: process.env.PARKS_API_KEY,
+        format: 'json',
+    }
+    let url = 'https://developer.nps.gov/api/v1/alerts';
+    return superagent.get(url).query(queryPark).then(data => {
+        console.log(data);
+        let resultArrPark = data.body['data'].map(element => {
+            resultArrPark.push(new Park(element));
+        })
 
-    return resultArr;
-
-
+    })
+    return resultArrPark;
 }
 
 // constructor
@@ -115,6 +127,15 @@ function CityWeather(descriptionData, time) {
     this.forecast = descriptionData;
     this.time = time;
 }
+
+function Park(name, address, fee, description, url) {
+    this.name = name;
+    this.address = address;
+    this.fee = fee;
+    this.description = description;
+    this.url = url;
+}
+
 
 app.listen(PORT, () => {
     console.log("it is listening" + PORT);
