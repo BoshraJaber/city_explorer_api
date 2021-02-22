@@ -13,8 +13,10 @@ require('dotenv').config();
 const PORT = process.env.PORT;
 
 // routes- endpoints
+
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
+app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 console.log(PORT);
 
 
@@ -40,6 +42,10 @@ function handelWeather(req, res) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
 
+}
+
+function handel404(req,res){
+    res.status(404).send("The page that you are trying to access doesn't exist");
 }
 
 // handel data for function
