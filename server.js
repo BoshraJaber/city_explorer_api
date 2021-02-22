@@ -25,20 +25,13 @@ console.log(PORT);
 function handelLocation(req, res) {
     try {
 
-        let url = `https://us1.locationiq.com/v1/search.php?key=pk.1651615f51eb2e74daed6ee9df38b7e3&q=${searchQuery}&format=json&limit=1`;
-
-        superagent.get('url').then(data => {
-            console.log(data);
-        }).catch(error => {
-            console.log(error);
-        });
-        //return a promise// the type of data that returns is a promise
-
         let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
         // because I want to send the object to the client
-        let locationObject = getLoctionData(searchQuery);
+        let locationObject = getLoctionData(searchQuery).then(data=> {
+            res.status(200).send(data);
+        })
         //200 means everything is ok
-        res.status(200).send(locationObject);
+        
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -60,21 +53,51 @@ function handel404(req, res) {
 }
 
 // handel data for function
-function getLoctionData(searchQuery) {
+function getLoctionData(searchQuery, res) {
+    //lab07
+const query = {
+    key :  process.env.GEOCODE_API_KEY,
+    q : searchQuery,
+    limit: 1,
+    format: 'json',
+}
+
+    let url = 'https://us1.locationiq.com/v1/search.php';
+// add .set() after get() if I want to add it to the head
+     return superagent.get('url').set().then(data => {
+        try{
+        let longitude = data.body[0].lon;
+        let latitude = data.body[0].lan;
+        let displayName = data.body[0].display_name;
+
+        let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+        res.status(200).send(responseObject);
+        } catch (error) {
+            res.status(500).send(error);
+        }
+
+        // res.status(200).send(data.body)
+        // console.log(data);
+        // return data.body;
+    }).catch(error => {
+        res.status(404).send('errpr');
+        // console.log(error);
+    });
+    //return a promise// the type of data that returns is a promise
     //get the data array from the json
-    let locationData = require('./data/location.json');
-    // i am getting these data from the local today
+    // let locationData = require('./data/location.json');
+    // // i am getting these data from the local today
 
-    //get values from object
-    let longitude = locationData[0].lon; // because it has one object
-    let latitude = locationData[0].lat;
+    // //get values from object
+    // let longitude = locationData[0].lon; // because it has one object
+    // let latitude = locationData[0].lat;
 
-    // I have the data so I can create the object
-    let displayName = locationData[0].display_name;
+    // // I have the data so I can create the object
+    // let displayName = locationData[0].display_name;
 
-    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+    // let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
 
-    return responseObject;
+    // return responseObject;
 }
 
 function getWeatherData() {
