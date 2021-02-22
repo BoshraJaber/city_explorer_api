@@ -16,23 +16,17 @@ const PORT = process.env.PORT;
 // routes- endpoints
 
 app.get('/location', handelLocation);
-app.get('/weather', handelWeather);
+// app.get('/weather', handelWeather);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
 function handelLocation(req, res) {
-    try {
-
         let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
         // because I want to send the object to the client
-      getLoctionData(searchQuery).then(data=> {
+        getLoctionData(searchQuery).then(data => {
             res.status(200).send(data);
         })
         //200 means everything is ok
-        
-    } catch (error) {
-        res.status(500).send('Sorry, an error happened..' + error);
-    }
 }
 
 function handelWeather(req, res) {
@@ -53,68 +47,45 @@ function handel404(req, res) {
 // handel data for function
 function getLoctionData(searchQuery) {
     //lab07
-const query = {
-    key:  process.env.GEOCODE_API_KEY,
-    q : searchQuery,
-    limit: 1,
-    format: 'json',
-}
+    const query = {
+        key: process.env.GEOCODE_API_KEY,
+        q: searchQuery,
+        limit: 1,
+        format: 'json',
+    };
 
     let url = 'https://us1.locationiq.com/v1/search.php'; //????
-// add .set() after get() if I want to add it to the head
-     return superagent.get('url').query(query).then(data => { // why query??
-        try{
-        let longitude = data.body[0].lon;
-        let latitude = data.body[0].lan;
-        let displayName = data.body[0].display_name;
+    // add .set() after get() if I want to add it to the head
+    return superagent.get(url).query(query).then(data => { // why query??
+        try {
+            // let longitude = data.body[0].lon;
+            // let latitude = data.body[0].lan;
+            // let displayName = data.body[0].display_name;
 
-        let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-        return responseObject;
+            // let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+            // return responseObject;
+            console.log(data);
         } catch (error) {
             res.status(500).send(error);
         }
-
-        // res.status(200).send(data.body)
-        // console.log(data);
-        // return data.body;
     }).catch(error => {
         res.status(500).send('There was an error getting data from API ' + error);
-        // console.log(error);
     });
-    //return a promise// the type of data that returns is a promise
-    //get the data array from the json
-    // let locationData = require('./data/location.json');
-    // // i am getting these data from the local today
-
-    // //get values from object
-    // let longitude = locationData[0].lon; // because it has one object
-    // let latitude = locationData[0].lat;
-
-    // // I have the data so I can create the object
-    // let displayName = locationData[0].display_name;
-
-    // let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-
-    // return responseObject;
 }
 
-function getWeatherData() {
-    let weatherData = require('./data/weather.json');
-    // console.log(weatherData);
-    let descriptionData = weatherData.data;
-    let resultArr = [];
-    for (let index = 0; index < descriptionData.length; index++) {
-        // console.log(descriptionData[index].datetime);
-        // console.log(new Date(descriptionData[index].datetime).toDateString());
-        resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
-    }
+// function getWeatherData() {
+//     let weatherData = require('./data/weather.json');
+//     let descriptionData = weatherData.data;
+//     let resultArr = [];
+//     for (let index = 0; index < descriptionData.length; index++) {
+//         resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
+//     }
 
 
-    return resultArr;
+//     return resultArr;
 
 
-}
-// console.log(responseObjectWeather);
+// }
 
 // constructor
 function CityLocation(searchQuery, displayName, lat, lon) {
