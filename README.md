@@ -54,3 +54,6 @@ This app was designed:
 | End Time |8:00 pm |
 |Estimated Time | 2 hours |
 | Actual Time | 3 hours due to an error delay |
+
+
+API location address: https://us1.locationiq.com/v1/search.php?key=pk.1651615f51eb2e74daed6ee9df38b7e3&q=amman&format=json&limit=1 

@@ -3,6 +3,7 @@
 //require statement (importing packages)
 let express = require('express');
 const cors = require('cors');
+let superagent = require('superagent'); // lab07
 // initialization and configuration 
 
 let app = express();
@@ -23,6 +24,16 @@ console.log(PORT);
 //handeler functions
 function handelLocation(req, res) {
     try {
+
+        let url = `https://us1.locationiq.com/v1/search.php?key=pk.1651615f51eb2e74daed6ee9df38b7e3&q=${searchQuery}&format=json&limit=1`;
+
+        superagent.get('url').then(data => {
+            console.log(data);
+        }).catch(error => {
+            console.log(error);
+        });
+        //return a promise// the type of data that returns is a promise
+
         let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
         // because I want to send the object to the client
         let locationObject = getLoctionData(searchQuery);
@@ -44,7 +55,7 @@ function handelWeather(req, res) {
 
 }
 
-function handel404(req,res){
+function handel404(req, res) {
     res.status(404).send("The page that you are trying to access doesn't exist");
 }
 
