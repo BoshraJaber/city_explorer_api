@@ -91,7 +91,7 @@ function getWeatherData() {
     return superagent.get(url).query(queryWeather).then(data => {
         console.log(data);
         let resultArr = data.body['data'].map(element => {
-            return resultArr.push(new CityWeather(element.weather.description, new Date(element.datetime).toDateString()));
+            return resultArr.push(new CityWeather(element.weather.description, new Date(element.datetime).toDateString()));// what data should I pass
             //  return element;
         })
         return resultArr;
@@ -99,7 +99,7 @@ function getWeatherData() {
     // return resultArr;
 }
 
-function getParkData(params) {
+function getParkData() {
     const queryPark = {
         key: process.env.PARKS_API_KEY,
         format: 'json',
