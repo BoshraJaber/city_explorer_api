@@ -57,3 +57,8 @@ This app was designed:
 
 
 API location address: https://us1.locationiq.com/v1/search.php?key=pk.1651615f51eb2e74daed6ee9df38b7e3&q=amman&format=json&limit=1 
+
+API weather address: https://api.weatherbit.io/v2.0/forecast/daily?city=amman&key=181db746d0254c6d944adf1a4c6bc024
+https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=181db746d0254c6d944adf1a4c6bc024
+
+https://www.weatherbit.io/api/weather-forecast-16-day

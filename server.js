@@ -1,36 +1,29 @@
 'use strict';
-
 //require statement (importing packages)
 let express = require('express');
 const cors = require('cors');
 let superagent = require('superagent'); // lab07
 // initialization and configuration 
-
 let app = express();
 app.use(cors());
-
 require('dotenv').config();
-
 const PORT = process.env.PORT;
-
 // routes- endpoints
-
 app.get('/location', handelLocation);
-// app.get('/weather', handelWeather);
+app.get('/weather', handelWeather);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
 function handelLocation(req, res) {
-        let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
-        // because I want to send the object to the client
-        getLoctionData(searchQuery).then(data => {
-            res.status(200).send(data);
-        })
-        //200 means everything is ok
+    let searchQuery = req.query.city;// we know it is called city from the app website from Network after the ? mark in the query
+    // because I want to send the object to the client
+    getLoctionData(searchQuery).then(data => {
+        res.status(200).send(data);
+    })
+    //200 means everything is ok
 }
 
 function handelWeather(req, res) {
-    // let searchQuery= req.query.weather;
     try {
         let weatherObject = getWeatherData();
         res.status(200).send(weatherObject);
@@ -58,13 +51,13 @@ function getLoctionData(searchQuery) {
     // add .set() after get() if I want to add it to the head
     return superagent.get(url).query(query).then(data => { // why query??
         try {
-            // let longitude = data.body[0].lon;
-            // let latitude = data.body[0].lan;
-            // let displayName = data.body[0].display_name;
+            let longitude = data.body[0].lon;
+            let latitude = data.body[0].lan;
+            let displayName = data.body[0].display_name;
 
-            // let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-            // return responseObject;
-            console.log(data);
+            let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+            return responseObject;
+            // console.log(data);
         } catch (error) {
             res.status(500).send(error);
         }
@@ -73,19 +66,41 @@ function getLoctionData(searchQuery) {
     });
 }
 
-// function getWeatherData() {
-//     let weatherData = require('./data/weather.json');
-//     let descriptionData = weatherData.data;
-//     let resultArr = [];
-//     for (let index = 0; index < descriptionData.length; index++) {
-//         resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
-//     }
+function getWeatherData() {
+    // const query = {
+    //     key: process.env.MASTER_API_KEY,
+    //     lat = 0,
+    //     lon = 0,
+    //     format: 'json',
+    // }
+    let url = 'https://api.weatherbit.io/v2.0/forecast/daily?&lat=38.123&lon=-78.543&key=181db746d0254c6d944adf1a4c6bc024';
+
+    return superagent.get(url).then(data => {
+        console.log(data);
+        //I need description and time
+        // let longitude = data.body[0].lon
+        // let descriptionData =
+
+    //         let resultArr = [];
+    //     for (let index = 0; index < descriptionData.length; index++) {
+    //         resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
+    //     }
+
+    }
+
+    )
+    // let weatherData = require('./data/weather.json');
+    // let descriptionData = weatherData.data;
+    // let resultArr = [];
+    // for (let index = 0; index < descriptionData.length; index++) {
+    //     resultArr.push(new CityWeather(descriptionData[index].weather.description, new Date(descriptionData[index].datetime).toDateString()));
+    // }
 
 
-//     return resultArr;
+    return resultArr;
 
 
-// }
+}
 
 // constructor
 function CityLocation(searchQuery, displayName, lat, lon) {
