@@ -4,11 +4,13 @@
 let express = require('express');
 const cors = require('cors');
 let superagent = require('superagent'); // lab07
+const pg = require('pg'); // lab08
 // initialization and configuration 
 let app = express();
 app.use(cors());
 require('dotenv').config();
 const PORT = process.env.PORT;
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 // routes- endpoints
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
@@ -28,7 +30,7 @@ function handelLocation(req, res) {
 function handelWeather(req, res) {
     // console.log(req.query);
     try {
-        getWeatherData(req,res)
+        getWeatherData(req, res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -36,9 +38,7 @@ function handelWeather(req, res) {
 
 function handleParks(req, res) {
     try {
-        getParkData(req,res).then(data => {
-            res.status(200).send(data);
-        })
+        getParkData(req, res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -60,14 +60,22 @@ function getLoctionData(searchQuery) {
 
     let url = 'https://us1.locationiq.com/v1/search.php'; //????
     // add .set() after get() if I want to add it to the head
-    return superagent.get(url).query(query).then(data => { // why query??
+    return superagent.get(url).query(query).then(data => {
         try {
             let longitude = data.body[0].lon;
             let latitude = data.body[0].lat;
             let displayName = data.body[0].display_name;
-            // latLonForWeather = [longitude, latitude];
 
             let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+            // to save the data from the res to the db
+
+            let dbQuery = `INSERT INTO locations(search_query,formatted_query,latitude, longitude) VALUES ($1,$2,$3,$4)RETURNING *`;
+            let safeValues = [responseObject.search_query, responseObject.formatted_query, responseObject.longitude, responseObject.latitude];;
+            client.query(dbQuery,safeValues).then(data=>{
+                console.log('data returned back from db ',data.rows);
+              }).catch(error=>{
+                console.log('an error occurred '+error);
+              });
             return responseObject;
             // console.log(data);
         } catch (error) {
@@ -78,7 +86,7 @@ function getLoctionData(searchQuery) {
     });
 }
 
-function getWeatherData(req,res) {
+function getWeatherData(req, res) {
     const queryWeather = {
         key: process.env.MASTER_API_KEY,
         lat: req.query.latitude,
@@ -88,33 +96,45 @@ function getWeatherData(req,res) {
     let url = 'https://api.weatherbit.io/v2.0/forecast/daily';
 
     superagent.get(url).query(queryWeather).then(data => {
-        console.log(data.body.data[0]);
+        // console.log(data.body.data[0]);
         let resultArr = [];
-        
+
         data.body.data.map(element => {
-          resultArr.push(new CityWeather(element.weather.description, new Date(element.valid_date).toDateString()))
+            resultArr.push(new CityWeather(element.weather.description, new Date(element.valid_date).toDateString()))
             //  return element;
         })
-        console.log(resultArr);
+        // console.log(resultArr);
         res.status(200).send(resultArr);
-    })
+    }).catch(error => {
+        res.status(500).send('There was an error getting data from API ' + error);
+    });
     // return resultArr;
 }
 
-function getParkData(params) {
+function getParkData(req, res) {
     const queryPark = {
-        key: process.env.PARKS_API_KEY,
+        api_key: process.env.PARKS_API_KEY,
+        // lat: req.query.latitude,
+        // lon: req.query.longitude,
+        q: req.query.search_query,
         format: 'json',
     }
-    let url = 'https://developer.nps.gov/api/v1/alerts';
-    return superagent.get(url).query(queryPark).then(data => {
-        console.log(data);
-        let resultArrPark = data.body['data'].map(element => {
-            resultArrPark.push(new Park(element));
+    let url = 'https://developer.nps.gov/api/v1/parks';
+    superagent.get(url).query(queryPark).then(data => {
+        console.log(data.body);
+        let resultArrPark = [];
+        data.body.data.map(element => {
+            resultArrPark.push(new Park(element.fullName, Object.values(element.addresses[0]).join(' '), element.entranceFees.cost, element.description, element.url))
         })
 
-    })
-    return resultArrPark;
+        // let resultArrPark = data.body['data'].map(element => {
+        //     resultArrPark.push(new Park(element));
+        // })
+        // console.log(resultArr);
+        res.status(200).send(resultArrPark);
+    }).catch(error => {
+        res.status(500).send('There was an error getting data from Park API ' + error);
+    });
 }
 
 // constructor
@@ -139,6 +159,15 @@ function Park(name, address, fee, description, url) {
 }
 
 
-app.listen(PORT, () => {
-    console.log("it is listening" + PORT);
+// app.listen(PORT, () => {
+//     console.log("it is listening" + PORT);
+// });
+
+// to connect the database to the app
+client.connect().then(() => {
+    app.listen(PORT, () => {
+        console.log('the app is listening to port ' + PORT);
+    });
+}).catch(error => {
+    console.log('an error occurred while connecting to database ' + error);
 });
