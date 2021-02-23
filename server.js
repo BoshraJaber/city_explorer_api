@@ -1,5 +1,5 @@
 'use strict';
-var latLonForWeather = [];
+// var latLonForWeather = [];
 //require statement (importing packages)
 let express = require('express');
 const cors = require('cors');
@@ -26,10 +26,9 @@ function handelLocation(req, res) {
 }
 
 function handelWeather(req, res) {
+    console.log(req.query);
     try {
-        getWeatherData().then(data => {
-            res.status(200).send(data);
-        })
+        getWeatherData(res,req)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -66,7 +65,7 @@ function getLoctionData(searchQuery) {
             let longitude = data.body[0].lon;
             let latitude = data.body[0].lat;
             let displayName = data.body[0].display_name;
-            latLonForWeather = [longitude, latitude];
+            // latLonForWeather = [longitude, latitude];
 
             let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
             return responseObject;
@@ -79,22 +78,25 @@ function getLoctionData(searchQuery) {
     });
 }
 
-function getWeatherData() {
+function getWeatherData(res,req) {
     const queryWeather = {
         key: process.env.MASTER_API_KEY,
-        lat: latLonForWeather[0],
-        lon: latLonForWeather[1],
+        lat: req.query.latitude,
+        lon: req.query.longitude,
         format: 'json',
     }
     let url = 'https://api.weatherbit.io/v2.0/forecast/daily';
 
-    return superagent.get(url).query(queryWeather).then(data => {
-        console.log(data);
-        let resultArr = data.body['data'].map(element => {
-            return resultArr.push(new CityWeather(element.weather.description, new Date(element.datetime).toDateString()));
+    superagent.get(url).query(queryWeather).then(data => {
+        // console.log(data.body.data[0].weather.description);
+        let resultArr = [];
+        
+        data.body.data.map(element => {
+          resultArr.push(new CityWeather(element.weather.description, new Date(element.valid_time).toDateString()))
             //  return element;
         })
-        return resultArr;
+        console.log(resultArr);
+        res.status(200).send(resultArr);
     })
     // return resultArr;
 }
