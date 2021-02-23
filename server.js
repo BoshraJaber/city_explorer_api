@@ -26,9 +26,9 @@ function handelLocation(req, res) {
 }
 
 function handelWeather(req, res) {
-    console.log(req.query);
+    // console.log(req.query);
     try {
-        getWeatherData(res,req)
+        getWeatherData(req,res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -36,7 +36,7 @@ function handelWeather(req, res) {
 
 function handleParks(req, res) {
     try {
-        getParkData().then(data => {
+        getParkData(req,res).then(data => {
             res.status(200).send(data);
         })
     } catch (error) {
@@ -78,7 +78,7 @@ function getLoctionData(searchQuery) {
     });
 }
 
-function getWeatherData(res,req) {
+function getWeatherData(req,res) {
     const queryWeather = {
         key: process.env.MASTER_API_KEY,
         lat: req.query.latitude,
@@ -88,11 +88,11 @@ function getWeatherData(res,req) {
     let url = 'https://api.weatherbit.io/v2.0/forecast/daily';
 
     superagent.get(url).query(queryWeather).then(data => {
-        // console.log(data.body.data[0].weather.description);
+        console.log(data.body.data[0]);
         let resultArr = [];
         
         data.body.data.map(element => {
-          resultArr.push(new CityWeather(element.weather.description, new Date(element.valid_time).toDateString()))
+          resultArr.push(new CityWeather(element.weather.description, new Date(element.valid_date).toDateString()))
             //  return element;
         })
         console.log(resultArr);
