@@ -1,5 +1,5 @@
 'use strict';
-// var latLonForWeather = [];
+
 //require statement (importing packages)
 let express = require('express');
 const cors = require('cors');
@@ -50,40 +50,66 @@ function handel404(req, res) {
 
 // handel data for function
 function getLoctionData(searchQuery) {
-    //lab07
-    const query = {
-        key: process.env.GEOCODE_API_KEY,
-        q: searchQuery,
-        limit: 1,
-        format: 'json',
-    };
+    let checkExist = 'SELECT * FROM locations WHERE search_query=$1';
+    let savedValues = [searchQuery];
 
-    let url = 'https://us1.locationiq.com/v1/search.php'; //????
-    // add .set() after get() if I want to add it to the head
-    return superagent.get(url).query(query).then(data => {
-        try {
-            let longitude = data.body[0].lon;
-            let latitude = data.body[0].lat;
-            let displayName = data.body[0].display_name;
+    // query return a promise because data takes time
+    // rows is an array of objects
+    return client.query(checkExist, savedValues).then(data => {
+        // console.log(data.rows);
+        // we can check row count or row Array. I know that because I console logged data
+        if (data.rowCount !== 0) {
+            //create new location object
+            let locationObject = new CityLocation(data.rows[0].search_query, data.rows[0].formatted_query, data.rows[0].latitude, data.rows[0].longitude);
+            // res.status(200).send(locationObject);
+            return locationObject;
 
-            let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-            // to save the data from the res to the db
+        } else {
+            // if I don`t have the data saved in the db
+            // ----------------------------
+            //lab07
+            const query = {
+                key: process.env.GEOCODE_API_KEY,
+                q: searchQuery,
+                limit: 1,
+                format: 'json',
+            };
 
-            let dbQuery = `INSERT INTO locations(search_query,formatted_query,latitude, longitude) VALUES ($1,$2,$3,$4)RETURNING *`;
-            let safeValues = [responseObject.search_query, responseObject.formatted_query, responseObject.longitude, responseObject.latitude];;
-            client.query(dbQuery,safeValues).then(data=>{
-                console.log('data returned back from db ',data.rows);
-              }).catch(error=>{
-                console.log('an error occurred '+error);
-              });
-            return responseObject;
-            // console.log(data);
-        } catch (error) {
-            res.status(500).send(error);
+            let url = 'https://us1.locationiq.com/v1/search.php';
+            // add .set() after get() if I want to add it to the head
+            return superagent.get(url).query(query).then(data => {
+                try {
+                    let longitude = data.body[0].lon;
+                    let latitude = data.body[0].lat;
+                    let displayName = data.body[0].display_name;
+
+                    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
+
+                    // to save the data from the res to the db
+                    // insert values to database
+
+                    let dbQuery = `INSERT INTO locations(search_query,formatted_query,latitude, longitude) VALUES ($1,$2,$3,$4)`;
+                    // RETURNING *`;
+                    let safeValues = [responseObject.search_query, responseObject.formatted_query, responseObject.longitude, responseObject.latitude];;
+                    client.query(dbQuery, safeValues).then(data => {
+                        console.log('data returned back from db ', data.rows);
+                    }).catch(error => {
+                        console.log('an error occurred ' + error);
+                    });
+                    return responseObject;
+                    // console.log(data);
+                } catch (error) {
+                    res.status(500).send(error);
+                }
+            }).catch(error => {
+                res.status(500).send('There was an error getting data from API ' + error);
+            });
+            //-------------------------------
+
         }
     }).catch(error => {
-        res.status(500).send('There was an error getting data from API ' + error);
-    });
+        console.log(error);
+    })
 }
 
 function getWeatherData(req, res) {
@@ -171,3 +197,5 @@ client.connect().then(() => {
 }).catch(error => {
     console.log('an error occurred while connecting to database ' + error);
 });
+
+// psql -d <city_explorer> -f <path/to/filename>
