@@ -10,7 +10,10 @@ let app = express();
 app.use(cors());
 require('dotenv').config();
 const PORT = process.env.PORT;
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const client = new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? true : false });
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
+
 // routes- endpoints
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
@@ -183,6 +186,26 @@ function Park(name, address, fee, description, url) {
     this.description = description;
     this.url = url;
 }
+
+function Movie(title, overview, average_votes, total_votes, image_url,popularity, released_on) {
+    this.title = title;
+    this.overview = overview;
+    this.average_votes = average_votes;
+    this.total_votes = total_votes;
+    this.image_url = image_url;
+    this.popularity = popularity;
+    this.released_on = released_on;
+}
+
+
+
+// "title": "Sleepless in Seattle",
+//     "overview": "A young boy who tries to set his dad up on a date after the death of his mother. He calls into a radio station to talk about his dad’s loneliness which soon leads the dad into meeting a Journalist Annie who flies to Seattle to write a story about the boy and his dad. Yet Annie ends up with more than just a story in this popular romantic comedy.",
+//     "average_votes": "6.60",
+//     "total_votes": "881",
+//     "image_url": "https://image.tmdb.org/t/p/w500/afkYP15OeUOD0tFEmj6VvejuOcz.jpg",
+//     "popularity": "8.2340",
+//     "released_on": "1993-06-24"
 
 
 // app.listen(PORT, () => {
