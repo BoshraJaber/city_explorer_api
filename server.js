@@ -19,6 +19,7 @@ app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
 app.get('/parks', handleParks);
 app.get('/movies', handleMovies);
+app.get('/yelp', handleYelp);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
@@ -51,6 +52,14 @@ function handleParks(req, res) {
 function handleMovies(req, res) {
     try {
         getMovieData(req, res)
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
+}
+
+function handleYelp(req,res){
+    try {
+        getYelpData(req, res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -187,8 +196,9 @@ function getMovieData(req, res) {
     superagent.get(url).query(queryMovie).then(data => {
         // console.log(data.body.results.Object.values(title));
         let resultArrMovie = [];
+        let imgURL = 'https://image.tmdb.org/t/p/w500'
         data.body.results.map(element => {
-            resultArrMovie.push(new Movie(element.title, element.overview, element.vote_average, element.vote_count, element.poster_path, element.popularity, element.release_date));
+            resultArrMovie.push(new Movie(element.title, element.overview, element.vote_average, element.vote_count, imgURL+element.poster_path, element.popularity, element.release_date));
         })
         // console.log(resultArrMovie);
         //title, overview, average_votes, total_votes, image_url, popularity, released_on
@@ -196,6 +206,14 @@ function getMovieData(req, res) {
     }).catch(error => {
         res.status(500).send('There was an error getting data from Park API ' + error);
     });
+}
+
+function getYelpData(req,res){
+    const queryYelp = {
+        api_key : process.env.MOVIE_API_KEY,
+        query : req.query.search_query,
+        format: 'json',
+    }
 }
 
 // constructor
