@@ -5,6 +5,8 @@ let express = require('express');
 const cors = require('cors');
 let superagent = require('superagent'); // lab07
 const pg = require('pg'); // lab08
+const axios = require("axios"); //lab09
+
 // initialization and configuration 
 let app = express();
 app.use(cors());
@@ -18,6 +20,8 @@ const client = new pg.Client(process.env.DATABASE_URL);
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
 app.get('/parks', handleParks);
+app.get('/movies', handleMovies);
+app.get('/yelp', handleYelp);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
@@ -42,6 +46,22 @@ function handelWeather(req, res) {
 function handleParks(req, res) {
     try {
         getParkData(req, res)
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
+}
+
+function handleMovies(req, res) {
+    try {
+        getMovieData(req, res)
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
+}
+
+function handleYelp(req, res) {
+    try {
+        getYelpData(req, res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -150,7 +170,7 @@ function getParkData(req, res) {
     }
     let url = 'https://developer.nps.gov/api/v1/parks';
     superagent.get(url).query(queryPark).then(data => {
-        console.log(data.body);
+        // console.log(data.body);
         let resultArrPark = [];
         data.body.data.map(element => {
             resultArrPark.push(new Park(element.fullName, Object.values(element.addresses[0]).join(' '), element.entranceFees.cost, element.description, element.url))
@@ -164,6 +184,72 @@ function getParkData(req, res) {
     }).catch(error => {
         res.status(500).send('There was an error getting data from Park API ' + error);
     });
+}
+
+function getMovieData(req, res) {
+    console.log(req.query.search_query);
+    const queryMovie = {
+        api_key: process.env.MOVIE_API_KEY,
+        query: req.query.search_query,
+        format: 'json',
+    }
+    // let url = 'https://api.themoviedb.org/3/movie/550';
+    let url = 'https://api.themoviedb.org/3/search/movie';
+    superagent.get(url).query(queryMovie).then(data => {
+        // console.log(data.body.results.Object.values(title));
+        let resultArrMovie = [];
+        let imgURL = 'https://image.tmdb.org/t/p/w500'
+        data.body.results.map(element => {
+            resultArrMovie.push(new Movie(element.title, element.overview, element.vote_average, element.vote_count, imgURL + element.poster_path, element.popularity, element.release_date));
+        })
+        // console.log(resultArrMovie);
+        //title, overview, average_votes, total_votes, image_url, popularity, released_on
+        res.status(200).send(resultArrMovie);
+    }).catch(error => {
+        res.status(500).send('There was an error getting data from Park API ' + error);
+    });
+}
+
+function getYelpData(req, res) {
+    let API_KEY = process.env.YELP_API_KEY;
+    // REST
+    let yelpREST = axios.create({
+        baseURL: "https://api.yelp.com/v3/businesses/search",
+        headers: {
+            Authorization: `Bearer ${API_KEY}`,
+            "Content-type": "application/json",
+        },
+    })
+    yelpREST("/businesses/search", {
+        params: {
+            location: req.query.search_query,
+            term: "restaurant",
+            limit: 5,
+            // latitude: req.query.latitude,
+            // longitude: req.query.longitude,
+
+        },
+    }).then(({ data }) => {
+        let { businesses } = data
+        businesses.forEach((b) => {
+            console.log("Name: ", b.name)
+        })
+    })
+
+
+    // const queryYelp = {
+
+    //     term: req.query.search_query,
+    //     latitude: req.query.latitude,
+    //     longitude: req.query.longitude,
+    //     format: 'json',
+    // }
+    // let url= 'https://api.yelp.com/v3/businesses/search';
+    // superagent.get(url).query(queryYelp).then(data => {
+    //     console.log(data.body);
+    // }).catch(error => {
+    //     res.status(500).send('There was an error getting data from Park API ' + error);
+    // });
 }
 
 // constructor
@@ -187,7 +273,7 @@ function Park(name, address, fee, description, url) {
     this.url = url;
 }
 
-function Movie(title, overview, average_votes, total_votes, image_url,popularity, released_on) {
+function Movie(title, overview, average_votes, total_votes, image_url, popularity, released_on) {
     this.title = title;
     this.overview = overview;
     this.average_votes = average_votes;
@@ -197,15 +283,19 @@ function Movie(title, overview, average_votes, total_votes, image_url,popularity
     this.released_on = released_on;
 }
 
+function Yelp(name, image_url, price, rating, url) {
+    this.name = name;
+    this.image_url = image_url;
+    this.price = price;
+    this.rating = rating;
+    this.url = url;
+}
 
-
-// "title": "Sleepless in Seattle",
-//     "overview": "A young boy who tries to set his dad up on a date after the death of his mother. He calls into a radio station to talk about his dad’s loneliness which soon leads the dad into meeting a Journalist Annie who flies to Seattle to write a story about the boy and his dad. Yet Annie ends up with more than just a story in this popular romantic comedy.",
-//     "average_votes": "6.60",
-//     "total_votes": "881",
-//     "image_url": "https://image.tmdb.org/t/p/w500/afkYP15OeUOD0tFEmj6VvejuOcz.jpg",
-//     "popularity": "8.2340",
-//     "released_on": "1993-06-24"
+// "name": "Pike Place Chowder",
+// "image_url": "https://s3-media3.fl.yelpcdn.com/bphoto/ijju-wYoRAxWjHPTCxyQGQ/o.jpg",
+// "price": "$$   ",
+// "rating": "4.5",
+// "url": "https
 
 
 // app.listen(PORT, () => {
