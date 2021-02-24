@@ -18,6 +18,7 @@ const client = new pg.Client(process.env.DATABASE_URL);
 app.get('/location', handelLocation);
 app.get('/weather', handelWeather);
 app.get('/parks', handleParks);
+app.get('/movies', handleMovies);
 app.get('*', handel404); // for 404 errors, the order of the error function matter, it should be last
 
 //handeler functions
@@ -42,6 +43,14 @@ function handelWeather(req, res) {
 function handleParks(req, res) {
     try {
         getParkData(req, res)
+    } catch (error) {
+        res.status(500).send('Sorry, an error happened..' + error);
+    }
+}
+
+function handleMovies(req, res) {
+    try {
+        getMovieData(req, res)
     } catch (error) {
         res.status(500).send('Sorry, an error happened..' + error);
     }
@@ -150,7 +159,7 @@ function getParkData(req, res) {
     }
     let url = 'https://developer.nps.gov/api/v1/parks';
     superagent.get(url).query(queryPark).then(data => {
-        console.log(data.body);
+        // console.log(data.body);
         let resultArrPark = [];
         data.body.data.map(element => {
             resultArrPark.push(new Park(element.fullName, Object.values(element.addresses[0]).join(' '), element.entranceFees.cost, element.description, element.url))
@@ -161,6 +170,29 @@ function getParkData(req, res) {
         // })
         // console.log(resultArr);
         res.status(200).send(resultArrPark);
+    }).catch(error => {
+        res.status(500).send('There was an error getting data from Park API ' + error);
+    });
+}
+
+function getMovieData(req, res) {
+    console.log(req.query.search_query);
+    const queryMovie = {
+        api_key : process.env.MOVIE_API_KEY,
+        query : req.query.search_query,
+        format: 'json',
+    }
+    // let url = 'https://api.themoviedb.org/3/movie/550';
+    let url = 'https://api.themoviedb.org/3/search/movie';
+    superagent.get(url).query(queryMovie).then(data => {
+        // console.log(data.body.results.Object.values(title));
+        let resultArrMovie = [];
+        data.body.results.map(element => {
+            resultArrMovie.push(new Movie(element.title, element.overview, element.vote_average, element.vote_count, element.poster_path, element.popularity, element.release_date));
+        })
+        // console.log(resultArrMovie);
+        //title, overview, average_votes, total_votes, image_url, popularity, released_on
+        res.status(200).send(resultArrMovie);
     }).catch(error => {
         res.status(500).send('There was an error getting data from Park API ' + error);
     });
@@ -187,7 +219,7 @@ function Park(name, address, fee, description, url) {
     this.url = url;
 }
 
-function Movie(title, overview, average_votes, total_votes, image_url,popularity, released_on) {
+function Movie(title, overview, average_votes, total_votes, image_url, popularity, released_on) {
     this.title = title;
     this.overview = overview;
     this.average_votes = average_votes;
