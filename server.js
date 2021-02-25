@@ -198,7 +198,7 @@ function getMovieData(req, res) {
     superagent.get(url).query(queryMovie).then(data => {
         // console.log(data.body.results.Object.values(title));
         let resultArrMovie = [];
-        let imgURL = 'https://image.tmdb.org/t/p/w500'
+        let imgURL = 'https://image.tmdb.org/t/p/w500/'
         data.body.results.map(element => {
             resultArrMovie.push(new Movie(element.title, element.overview, element.vote_average, element.vote_count, imgURL + element.poster_path, element.popularity, element.release_date));
         })
@@ -212,44 +212,55 @@ function getMovieData(req, res) {
 
 function getYelpData(req, res) {
     let API_KEY = process.env.YELP_API_KEY;
-    // REST
-    let yelpREST = axios.create({
-        baseURL: "https://api.yelp.com/v3/businesses/search",
-        headers: {
-            Authorization: `Bearer ${API_KEY}`,
-            "Content-type": "application/json",
-        },
-    })
-    yelpREST("/businesses/search", {
-        params: {
-            location: req.query.search_query,
-            term: "restaurant",
-            limit: 5,
-            // latitude: req.query.latitude,
-            // longitude: req.query.longitude,
+    // // REST
+    // let yelpREST = axios.create({
+    //     baseURL: "https://api.yelp.com/v3/businesses/search",
+    //     headers: {
+    //         Authorization: `Bearer ${API_KEY}`,
+    //         "Content-type": "application/json",
+    //     },
+    // })
+    // yelpREST("/businesses/search", {
+    //     params: {
+    //         location: req.query.search_query,
+    //         term: "restaurant",
+    //         limit: 5,
+    //         // latitude: req.query.latitude,
+    //         // longitude: req.query.longitude,
 
-        },
-    }).then(({ data }) => {
-        let { businesses } = data
-        businesses.forEach((b) => {
-            console.log("Name: ", b.name)
+    //     },
+    // }).then(({ data }) => {
+    //     let { businesses } = data
+    //     businesses.forEach((b) => {
+    //         console.log("Name: ", b.name)
+    //     })
+    // })
+    const fivePerPage = 5;
+
+    const queryYelp = {
+
+        term: "restaurants",
+        // latitude: req.query.latitude,
+        // longitude: req.query.longitude,
+        location: req.query.search_query,
+        limit : 5,
+        offset: 1,
+
+    }
+    let url= 'https://api.yelp.com/v3/businesses/search';
+    superagent.get(url).set( 'Authorization', `Bearer ${API_KEY}`).query(queryYelp).then(data => {
+        // console.log(data.body);
+        let resultArrYelp = [];
+        data.body.businesses.map(element => {
+            resultArrYelp.push(new Yelp(element.name, element.image_url, element.price, element.rating, element.url));
         })
-    })
+        // console.log(resultArrMovie);
+        //title, overview, average_votes, total_votes, image_url, popularity, released_on
+        res.status(200).send(resultArrYelp);
 
-
-    // const queryYelp = {
-
-    //     term: req.query.search_query,
-    //     latitude: req.query.latitude,
-    //     longitude: req.query.longitude,
-    //     format: 'json',
-    // }
-    // let url= 'https://api.yelp.com/v3/businesses/search';
-    // superagent.get(url).query(queryYelp).then(data => {
-    //     console.log(data.body);
-    // }).catch(error => {
-    //     res.status(500).send('There was an error getting data from Park API ' + error);
-    // });
+    }).catch(error => {
+        res.status(500).send('There was an error getting data from Park API ' + error);
+    });
 }
 
 // constructor
