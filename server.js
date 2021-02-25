@@ -13,8 +13,9 @@ app.use(cors());
 require('dotenv').config();
 const PORT = process.env.PORT;
 // const client = new pg.Client(process.env.DATABASE_URL);
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? true : false });
-// const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? true : false });
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
+// for local use I add the first one, and for heruko I add the second long one
 
 // routes- endpoints
 app.get('/location', handelLocation);
