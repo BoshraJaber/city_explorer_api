@@ -12,8 +12,8 @@ let app = express();
 app.use(cors());
 require('dotenv').config();
 const PORT = process.env.PORT;
-const client = new pg.Client(process.env.DATABASE_URL);
-// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? true : false });
+// const client = new pg.Client(process.env.DATABASE_URL);
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? true : false });
 // const client = new pg.Client({ connectionString: process.env.DATABASE_URL,   ssl: { rejectUnauthorized: false } });
 
 // routes- endpoints
@@ -211,6 +211,7 @@ function getMovieData(req, res) {
 }
 
 function getYelpData(req, res) {
+    let pageNum = req.query.page;
     let API_KEY = process.env.YELP_API_KEY;
     // // REST
     // let yelpREST = axios.create({
@@ -235,7 +236,7 @@ function getYelpData(req, res) {
     //         console.log("Name: ", b.name)
     //     })
     // })
-    const fivePerPage = 5;
+    let fivePerPage = 5;
 
     const queryYelp = {
 
@@ -244,7 +245,7 @@ function getYelpData(req, res) {
         // longitude: req.query.longitude,
         location: req.query.search_query,
         limit : 5,
-        offset: 1,
+        offset: (pageNum-1)*5+1,
 
     }
     let url= 'https://api.yelp.com/v3/businesses/search';
